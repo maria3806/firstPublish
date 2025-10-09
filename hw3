@@ -1,0 +1,215 @@
+package main
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+	"unicode"
+)
+
+func main() {
+	for {
+		fmt.Println("Валідатор даних")
+		fmt.Println("1. Перевірка email")
+		fmt.Println("2. Перевірка пароля")
+		fmt.Println("3. Перевірка телефона")
+		fmt.Println("4. Перевірка IP")
+		fmt.Println("5. Перевірка URL")
+		fmt.Println("0. Вихід")
+		fmt.Print("Ваш вибір: ")
+
+		var choice int
+		fmt.Scanln(&choice)
+
+		switch choice {
+		case 0:
+			fmt.Println("Вихід...")
+			return
+		case 1:
+			checkEmail()
+		case 2:
+			checkPassword()
+		case 3:
+			checkPhone()
+		case 4:
+			checkIP()
+		case 5:
+			checkURL()
+		default:
+			fmt.Println("Такої опції немає")
+		}
+	}
+}
+
+func checkEmail() {
+	var email string
+	fmt.Print("Введіть email: ")
+	fmt.Scanln(&email)
+	email = strings.TrimSpace(strings.ToLower(email))
+
+	if strings.Contains(email, " ") {
+		fmt.Println("Email не повинен містити пробіли")
+		return
+	}
+	if strings.Count(email, "@") != 1 {
+		fmt.Println("Має бути один символ @")
+		return
+	}
+
+	parts := strings.Split(email, "@")
+	if len(parts[0]) == 0 {
+		fmt.Println("Немає частини перед @")
+		return
+	}
+	if len(parts[1]) == 0 {
+		fmt.Println("Немає частини після @")
+		return
+	}
+	if !strings.Contains(parts[1], ".") {
+		fmt.Println("У домені немає крапки")
+		return
+	}
+
+	lastDot := strings.LastIndex(parts[1], ".")
+	tld := parts[1][lastDot+1:]
+	if len(tld) < 2 || len(tld) > 6 {
+		fmt.Println("Кінець домену неправильний")
+		return
+	}
+
+	for _, r := range parts[0] {
+		if !(unicode.IsLetter(r) || unicode.IsDigit(r) || r == '.' || r == '-' || r == '_') {
+			fmt.Println("Недопустимі символи в імені")
+			return
+		}
+	}
+
+	fmt.Println("Email правильний")
+}
+
+func checkPassword() {
+	var pass string
+	fmt.Print("Введіть пароль: ")
+	fmt.Scanln(&pass)
+	pass = strings.TrimSpace(pass)
+
+	if len(pass) < 8 {
+		fmt.Println("Пароль занадто короткий")
+		return
+	}
+	if strings.Contains(pass, " ") {
+		fmt.Println("Пароль не повинен містити пробіли")
+		return
+	}
+
+	hasUp := false
+	hasLow := false
+	hasNum := false
+	hasSpec := false
+	spec := "!@#$%^&*()-_=+[]{}|;:'\\\",.<>/?"
+
+	for _, r := range pass {
+		switch {
+		case unicode.IsUpper(r):
+			hasUp = true
+		case unicode.IsLower(r):
+			hasLow = true
+		case unicode.IsDigit(r):
+			hasNum = true
+		case strings.ContainsRune(spec, r):
+			hasSpec = true
+		}
+	}
+
+	if hasUp && hasLow && hasNum && hasSpec {
+		fmt.Println("Пароль надійний")
+	} else {
+		fmt.Println("Пароль повинен містити великі й малі літери, цифри та спецсимволи")
+	}
+}
+
+func checkPhone() {
+	var phone string
+	fmt.Print("Введіть телефон: ")
+	fmt.Scanln(&phone)
+	phone = strings.TrimSpace(phone)
+
+	if !strings.HasPrefix(phone, "+") {
+		fmt.Println("Телефон повинен починатися з +")
+		return
+	}
+
+	count := 0
+	for _, r := range phone {
+		if unicode.IsDigit(r) {
+			count++
+		} else if r != '+' && r != '-' && r != '(' && r != ')' && r != ' ' {
+			fmt.Println("Телефон містить недопустимі символи")
+			return
+		}
+	}
+
+	if count < 10 || count > 15 {
+		fmt.Println("Кількість цифр повинна бути від 10 до 15")
+		return
+	}
+
+	fmt.Println("Телефон правильний")
+}
+
+func checkIP() {
+	var ip string
+	fmt.Print("Введіть IP: ")
+	fmt.Scanln(&ip)
+	ip = strings.TrimSpace(ip)
+	parts := strings.Split(ip, ".")
+
+	if len(parts) != 4 {
+		fmt.Println("IP повинен мати 4 частини")
+		return
+	}
+
+	for _, p := range parts {
+		if len(p) == 0 {
+			fmt.Println("IP містить порожню частину")
+			return
+		}
+		num, err := strconv.Atoi(p)
+		if err != nil || num < 0 || num > 255 {
+			fmt.Println("Частини IP повинні бути від 0 до 255")
+			return
+		}
+		if len(p) > 1 && p[0] == '0' {
+			fmt.Println("Частина IP не може починатися з нуля")
+			return
+		}
+	}
+
+	fmt.Println("IP правильний")
+}
+
+func checkURL() {
+	var url string
+	fmt.Print("Введіть URL: ")
+	fmt.Scanln(&url)
+	url = strings.TrimSpace(url)
+
+	if !(strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")) {
+		fmt.Println("URL повинен починатися з http:// або https://")
+		return
+	}
+
+	u := strings.TrimPrefix(url, "http://")
+	u = strings.TrimPrefix(u, "https://")
+
+	if strings.Contains(u, " ") {
+		fmt.Println("URL не повинен містити пробіли")
+		return
+	}
+	if !strings.Contains(u, ".") {
+		fmt.Println("У домені немає крапки")
+		return
+	}
+
+	fmt.Println("URL правильний")
+}
